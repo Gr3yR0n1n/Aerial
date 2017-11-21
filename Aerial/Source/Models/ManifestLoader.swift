@@ -73,7 +73,7 @@ class ManifestLoader {
             })
             
         }
-        let apiURL = "http://a1.phobos.apple.com/us/r1000/000/Features/atv/AutumnResources/videos/entries.json"
+        let apiURL = "http://www.gr3yR0n1n.com/aerial/videos/entries.json"
         guard let url = URL(string: apiURL) else {
             fatalError("Couldn't init URL from string")
         }
