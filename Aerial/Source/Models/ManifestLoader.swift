@@ -73,14 +73,36 @@ class ManifestLoader {
             })
             
         }
-        let apiURL = "http://www.gr3yR0n1n.com/aerial/videos/entries.json"
-        guard let url = URL(string: apiURL) else {
-            fatalError("Couldn't init URL from string")
+        
+        /*
+        if let path = Bundle.main.path(forResource: "~/.aerial.plist", ofType: "plist") {
+            if let dict = NSDictionary(contentsOfFile: path) {
+                // Use dictionary here
+                var apiURL = dict["apiURL"] ?? ""
+            }
         }
+        if apiURL == nil {
+            let apiURL = "http://www.gr3yR0n1n.com/aerial/videos/entries.json"
+            defaults.set(apiURL as NSString, forKey: "apiURL")
+        }
+        */
+        
+        let apiURL = loadapiURL()
+        
+        if apiURL == nil {
+            let apiURL = "http://www.gr3yR0n1n.com/aerial/videos/entries.json"
+        }
+        
+        //data.setObject("http://www.gr3yR0n1n.com/aerial/videos/entries.json", forKey: "apiURL")
+        //data.writeToFile(path, atomically: true)
+        
+        let url = URL(string: apiURL!)
+        
+        
         // use ephemeral session so when we load json offline it fails and puts us in offline mode
         let configuration = URLSessionConfiguration.ephemeral
         let session = URLSession(configuration: configuration)
-        let task = session.dataTask(with: url, completionHandler: completionHandler)
+        let task = session.dataTask(with: url!, completionHandler: completionHandler)
         task.resume()
     }
     
@@ -92,6 +114,39 @@ class ManifestLoader {
         
         offlineMode = true
         readJSONFromData(savedJSON)
+    }
+    
+    func loadapiURL() -> String? {
+        let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true) as NSArray
+        let documentDirectory = paths[0] as! String
+        let path = documentDirectory.appending("/aerial.plist")
+        let fileManager = FileManager.default
+        if(!fileManager.fileExists(atPath: path)){
+            if let bundlePath = Bundle.main.path(forResource: "aerial", ofType: "plist"){
+                let result = NSMutableDictionary(contentsOfFile: bundlePath)
+                print("Bundle file myData.plist is -> \(result?.description)")
+                do{
+                    try fileManager.copyItem(atPath: bundlePath, toPath: path)
+                }catch{
+                    print("copy failure.")
+                }
+            }else{
+                print("file aerial.plist not found.")
+            }
+        }else{
+            print("file aerial.plist already exits at path.")
+        }
+        
+        let resultDictionary = NSMutableDictionary(contentsOfFile: path)
+        print("load aerial.plist is ->\(resultDictionary?.description)")
+        
+        let myDict = NSDictionary(contentsOfFile: path)
+        if let dict = myDict{
+            return dict.object(forKey: "apiURL") as! String?
+        }else{
+            print("load failure.")
+            return nil
+        }
     }
     
     func readJSONFromData(_ data: Data) {
